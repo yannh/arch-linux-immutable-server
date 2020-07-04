@@ -1,0 +1,17 @@
+{
+  "hostname": "snowball",
+  "architecture": "amd64",
+  "keyboard_layout": "us",
+  "root_password": "changeme",
+  "user": "foo",
+  "user_full_name": "bar",
+  "user_password": "changeme",
+  "email": "",
+  "arch_mirror": "ftp.hosteurope.de",
+  "arch_mirror_directory": "mirror/ftp.archlinux.org/iso",
+  "arch_version": "2020.07.01",
+  "timezone": "Europe/Berlin",
+  "ntp_pool": "de.pool.ntp.org",
+  "files_folder": "/tmp/files",
+  "templates_folder": "/tmp/templates"
+}
