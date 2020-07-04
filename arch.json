@@ -1,0 +1,48 @@
+{
+  "builders": [
+    {
+      "accelerator": "kvm",
+      "boot_command": [
+        "<enter>",
+        "<wait25s>",
+        "curl -o ./bootstrap.sh http://{{ .HTTPIP }}:{{ .HTTPPort }}/bootstrap.sh<enter><wait>",
+        "chmod a+x bootstrap.sh<enter>",
+        "./bootstrap.sh<enter>"
+      ],
+      "boot_wait": "2s",
+      "disk_interface": "virtio",
+      "disk_size": "4096M",
+      "format": "raw",
+      "headless": false,
+      "http_directory": "packer_http",
+      "iso_checksum": "sha1:8bcd9ef5d7bd22a5e1de671905abaf07ca8cd7f5",
+      "iso_url": "http://{{user `arch_mirror`}}/{{user `arch_mirror_directory`}}/{{user `arch_version`}}/archlinux-{{user `arch_version`}}-x86_64.iso",
+      "qemuargs": [
+        [
+          "-m",
+          "1024m"
+        ],
+        [
+          "-smp",
+          "2"
+        ],
+        [
+          "-k",
+          "en-gb"
+        ],
+        [
+          "-display",
+          "sdl"
+        ]
+      ],
+      "shutdown_command": "halt -p",
+      "ssh_password": "{{user `root_password`}}",
+      "ssh_port": 22,
+      "ssh_timeout": "1200s",
+      "ssh_username": "root",
+      "type": "qemu",
+      "vm_name": "{{user `hostname`}}"
+    }
+  ]
+}
+
