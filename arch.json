@@ -5,9 +5,7 @@
       "boot_command": [
         "<enter>",
         "<wait25s>",
-        "curl -o ./bootstrap.sh http://{{ .HTTPIP }}:{{ .HTTPPort }}/bootstrap.sh<enter><wait>",
-        "chmod a+x bootstrap.sh<enter>",
-        "./bootstrap.sh<enter>"
+        "curl -s ./bootstrap.sh http://{{ .HTTPIP }}:{{ .HTTPPort }}/bootstrap.sh | bash<enter>"
       ],
       "boot_wait": "2s",
       "disk_interface": "virtio",
@@ -25,10 +23,6 @@
         [
           "-smp",
           "2"
-        ],
-        [
-          "-k",
-          "en-gb"
         ],
         [
           "-display",
