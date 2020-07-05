@@ -1,27 +1,37 @@
 #!/bin/bash -e
 
-printf "n\np\n1\n\n+200M\nw\n" | fdisk /dev/vda
-printf "n\np\n2\n\n\nt\n2\n8e\nw\n" | fdisk /dev/vda
-yes | mkfs.ext4 -m 1 /dev/vda1
-yes | mkfs.ext4 -m 1 /dev/vda2
+sgdisk --zap-all /dev/vda
+printf "n\n1\n\n+200M\nef00\nw\ny\n" | gdisk /dev/vda
+mkfs.fat -F32 -n EFIBOOT /dev/vda1
+printf "n\n2\n\n\n8304\nw\ny\n"| gdisk /dev/vda
+mkfs.ext4 -L ROOT -U 4f68bce3-e8cd-4db1-96e7-fbcaf984b709 /dev/vda2
 
-e2label /dev/vda1 boot
-e2label /dev/vda2 root
-
-mount /dev/vda2 /mnt/
+mount -L ROOT /mnt/
 mkdir /mnt/boot
-mount /dev/vda1 /mnt/boot
+mount -L EFIBOOT /mnt/boot
 
 yes '' | pacstrap -i /mnt base linux
 
 genfstab -Lp /mnt >> /mnt/etc/fstab
-arch-chroot /mnt /bin/bash -e <<CHROOTEOF && reboot
-pacman -Sy
-pacman -Sy --noconfirm openssh grub python3 ansible
+arch-chroot /mnt /bin/bash -e <<CHROOTEOF
+pacman -Sy --noconfirm efibootmgr dosfstools gptfdisk
 
-# Configure grub
-grub-install /dev/vda
-grub-mkconfig -o /boot/grub/grub.cfg
+bootctl install
+
+cat << BOOTCTL > /boot/loader/entries/arch-uefi.conf
+title          Arch Linux
+linux          /vmlinuz-linux
+initrd         /initramfs-linux.img
+options        root=LABEL=ROOT rw
+BOOTCTL
+
+cat << BOOTCTL > /boot/loader/loader.conf
+default   arch-uefi
+timeout   1
+BOOTCTL
+
+
+pacman -Sy --noconfirm openssh python3 ansible
 
 # Bootstrap network setup
 cat > /etc/systemd/network/10-en-dhcp.network <<EOF
@@ -46,5 +56,6 @@ echo "root:changeme" | chpasswd
 # DNS setup
 systemctl enable systemd-resolved
 CHROOTEOF
+
 reboot
 

@@ -7,7 +7,7 @@
         "<wait25s>",
         "curl -s ./bootstrap.sh http://{{ .HTTPIP }}:{{ .HTTPPort }}/bootstrap.sh | bash<enter>"
       ],
-      "boot_wait": "2s",
+      "boot_wait": "5s",
       "disk_interface": "virtio",
       "disk_size": "4096M",
       "format": "raw",
@@ -27,6 +27,10 @@
         [
           "-display",
           "sdl"
+        ],
+        [
+          "-bios",
+          "/usr/share/ovmf/OVMF.fd"
         ]
       ],
       "shutdown_command": "halt -p",
