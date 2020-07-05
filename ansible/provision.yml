@@ -1,0 +1,74 @@
+---
+- hosts: all
+  vars:
+    nameservers: ["1.0.0.1"]
+    ansible_folder: "/tmp/ansible"
+
+  tasks:
+    - name: load variables
+      include_vars: "/tmp/config.json"
+
+    - name: setup resolv.conf
+      file:
+        src: '/run/systemd/resolve/stub-resolv.conf'
+        dest: '/etc/resolv.conf'
+        force: yes
+        owner: root
+        group: root
+        state: link
+
+    - name: Install packages
+      pacman:
+        name:
+          - sudo
+          - vi
+          - nginx
+        state: present
+
+    - name: systemd service to pre-populate overlay fs
+      copy:
+        src: '{{files_folder}}/populate-overlay.service'
+        dest: '/etc/systemd/system/populate-overlay.service'
+        mode: '0644'
+        owner: root
+        group: root
+
+    - name: ensure local-fs.target.wants target exists
+      file:
+        dest: '/etc/systemd/system/local-fs.target.wants'
+        state: directory
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: ensure populate-overlay.service is symlinked there
+      file:
+        src: '/etc/systemd/system/populate-overlay.service'
+        dest: '/etc/systemd/system/local-fs.target.wants/populate-overlay.service'
+        state: link
+        owner: root
+        group: root
+
+    - name: Create overlay tmpfs
+      mount:
+        path: /mnt/overlay
+        src: tmpfs
+        fstype: tmpfs
+        opts: defaults,size=256M
+        state: present
+
+    - name: Mount overlay on /home
+      mount:
+        path: /home
+        src: overlay
+        fstype: overlay
+        opts: lowerdir=/home,upperdir=/mnt/overlay/home,workdir=/mnt/overlay/workdir/home,x-systemd.requires=populate-overlay.service
+        state: present
+
+    - name: Mount overlay on /var
+      mount:
+        path: /var
+        src: overlay
+        fstype: overlay
+        opts: lowerdir=/var,upperdir=/mnt/overlay/var,workdir=/mnt/overlay/workdir/var,x-systemd.requires=populate-overlay.service
+        state: present

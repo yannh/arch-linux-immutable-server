@@ -14,11 +14,16 @@ mount /dev/vda1 /mnt/boot
 
 yes '' | pacstrap -i /mnt base linux
 
-genfstab -p /mnt >> /mnt/etc/fstab
-arch-chroot /mnt /bin/bash <<CHROOTEOF
+genfstab -Lp /mnt >> /mnt/etc/fstab
+arch-chroot /mnt /bin/bash -e <<CHROOTEOF && reboot
 pacman -Sy
-pacman -Sy --noconfirm openssh grub dhclient vi
+pacman -Sy --noconfirm openssh grub python3 ansible
 
+# Configure grub
+grub-install /dev/vda
+grub-mkconfig -o /boot/grub/grub.cfg
+
+# Bootstrap network setup
 cat > /etc/systemd/network/10-en-dhcp.network <<EOF
 [Match]
 Name=en*
@@ -31,13 +36,15 @@ UseDomains=true
 EOF
 systemctl enable systemd-networkd
 
+# SSHd setup
 sed -i "s/.*PermitRootLogin.*/PermitRootLogin yes/g" /etc/ssh/sshd_config
 systemctl enable sshd
 
+# Sets bootstrap root password
 echo "root:changeme" | chpasswd
 
-grub-install /dev/vda
-grub-mkconfig -o /boot/grub/grub.cfg
+# DNS setup
+systemctl enable systemd-resolved
 CHROOTEOF
-
 reboot
+

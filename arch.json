@@ -37,6 +37,39 @@
       "type": "qemu",
       "vm_name": "{{user `hostname`}}"
     }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "./files",
+      "destination": "/tmp"
+    },
+    {
+      "type": "file",
+      "source": "./templates",
+      "destination": "/tmp"
+    },
+    {
+      "destination": "/tmp/config.json",
+      "source": "config.json",
+      "type": "file"
+    },
+    {
+      "clean_staging_directory": true,
+      "extra_arguments": [
+        "--diff",
+        "-e",
+        "'ansible_python_interpreter=/usr/bin/python3'"
+      ],
+      "playbook_dir": "ansible",
+      "playbook_file": "ansible/provision.yml",
+      "staging_directory": "/tmp/ansible",
+      "type": "ansible-local"
+    },
+    {
+      "type": "shell",
+      "inline": ["rm -rf /root/.ansible /root/.ssh /tmp/*"]
+    }
   ]
 }
 
