@@ -4,7 +4,7 @@ sgdisk --zap-all /dev/vda
 printf "n\n1\n\n+200M\nef00\nw\ny\n" | gdisk /dev/vda
 mkfs.fat -F32 -n EFIBOOT /dev/vda1
 printf "n\n2\n\n\n8304\nw\ny\n"| gdisk /dev/vda
-mkfs.ext4 -L ROOT -U 4f68bce3-e8cd-4db1-96e7-fbcaf984b709 /dev/vda2
+mkfs.ext4 -L ROOT -m 0 -U 4f68bce3-e8cd-4db1-96e7-fbcaf984b709 /dev/vda2
 
 mount -L ROOT /mnt/
 mkdir /mnt/boot
@@ -14,7 +14,7 @@ yes '' | pacstrap -i /mnt base linux
 
 genfstab -Lp /mnt >> /mnt/etc/fstab
 arch-chroot /mnt /bin/bash -e <<CHROOTEOF
-pacman -Sy --noconfirm efibootmgr dosfstools gptfdisk
+pacman -Sy --noprogressbar --noconfirm efibootmgr dosfstools gptfdisk
 
 bootctl install
 
@@ -30,8 +30,7 @@ default   arch-uefi
 timeout   1
 BOOTCTL
 
-
-pacman -Sy --noconfirm openssh python3 ansible
+pacman -Sy --noprogressbar --noconfirm python3 ansible openssh
 
 # Bootstrap network setup
 cat > /etc/systemd/network/10-en-dhcp.network <<EOF
@@ -55,6 +54,11 @@ echo "root:changeme" | chpasswd
 
 # DNS setup
 systemctl enable systemd-resolved
+
+# Generating initramfs
+sed -i 's/^HOOKS.*/HOOKS=(base systemd keymap modconf block filesystems keyboard fsck)/' /etc/mkinitcpio.conf
+mkinitcpio -p linux
+
 CHROOTEOF
 
 reboot
