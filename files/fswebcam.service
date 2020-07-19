@@ -1,0 +1,10 @@
+[Unit]
+Description=FSWebCam
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=fswebcam -l 5 -r 1920x1080 --delay 3 -F 5 --set brightness=100% --jpeg 98 --skip 100 --no-banner /usr/share/nginx/html/ant.jpeg
+
+[Install]
+WantedBy=multi-user.target

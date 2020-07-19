@@ -2,5 +2,6 @@ output-qemu
 packer_cache
 config.json
 files/config.yml
+files/fswebcam
 *.swp
 *.swo

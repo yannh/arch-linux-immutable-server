@@ -23,52 +23,32 @@
           - sudo
           - vi
           - nginx
+          - gd
         state: present
 
-    - name: systemd service to pre-populate overlay fs
+    - name: Install fswebcam
       copy:
-        src: '{{files_folder}}/populate-overlay.service'
-        dest: '/etc/systemd/system/populate-overlay.service'
-        mode: '0644'
-        owner: root
-        group: root
-
-    - name: ensure local-fs.target.wants target exists
-      file:
-        dest: '/etc/systemd/system/local-fs.target.wants'
-        state: directory
+        src: '{{files_folder}}/fswebcam'
+        dest: '/usr/local/bin/fswebcam'
+        owner: 'root'
+        group: 'root'
         mode: '0755'
-        owner: root
-        group: root
 
-    - name: ensure populate-overlay.service is symlinked there
-      file:
-        src: '/etc/systemd/system/populate-overlay.service'
-        dest: '/etc/systemd/system/local-fs.target.wants/populate-overlay.service'
-        state: link
-        owner: root
-        group: root
+    - name: configure nginx
+      systemd:
+        name: nginx
+        enabled: 'yes'
 
-    - name: Create overlay tmpfs
-      mount:
-        path: /mnt/overlay
-        src: tmpfs
-        fstype: tmpfs
-        opts: defaults,size=256M
-        state: present
+    - name: install fswebcam systemd unit
+      copy:
+        src: '{{files_folder}}/fswebcam.service'
+        dest: '/etc/systemd/system/fswebcam.service'
+        owner: 'root'
+        group: 'root'
+        mode: '0755'
 
-    - name: Mount overlay on /home
-      mount:
-        path: /home
-        src: overlay
-        fstype: overlay
-        opts: lowerdir=/home,upperdir=/mnt/overlay/home,workdir=/mnt/overlay/workdir/home,x-systemd.requires=populate-overlay.service
-        state: present
-
-    - name: Mount overlay on /var
-      mount:
-        path: /var
-        src: overlay
-        fstype: overlay
-        opts: lowerdir=/var,upperdir=/mnt/overlay/var,workdir=/mnt/overlay/workdir/var,x-systemd.requires=populate-overlay.service
-        state: present
+    - name: enable fswebcam unit
+      systemd:
+        name: 'fswebcam'
+        daemon_reload: 'yes'
+        enabled: 'yes'
